@@ -1,5 +1,5 @@
 # Changelog
-## Unreleased
+## 0.3
 - Fixed data path (correct path: `~/.local/share/satnogs-tabulation-helper/`)
 - Fixed marker input (rounded to nearest integer pixel value).
 - Added STRF rffit hint text (by using `--show-hint`).

@@ -20,7 +20,7 @@ from satnogs_api_client import fetch_observation_data, fetch_tle_of_observation
 
 logger = logging.getLogger(__name__)
 
-__version__ = '0.3.dev'
+__version__ = '0.3'
 
 STRF_HINT_TEXT = """
 Modify the following line:
