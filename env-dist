@@ -1,0 +1,8 @@
+# SATNOGS_DB_API_TOKEN="654321addyoursatnogsdbapitokenhere123456"
+
+# ---
+# Un-comment the following lines to use the development servers.
+# Tipp: Delete all tabulation-helper application data before changing those values!
+
+# SATNOGS_NETWORK_API_URL="https://network-dev.satnogs.org/api/"
+# SATNOGS_DB_API_URL="https://db-dev.satnogs.org/api/"
