@@ -9,7 +9,7 @@ Those measurements are stored in a STRF-compatible data file.
 
 ## Installation & Usage
 
-see <docs/usage_guide.md>.
+Follow the  [Usage Guide](./docs/usage_guide.md).
 
 ## History
 
