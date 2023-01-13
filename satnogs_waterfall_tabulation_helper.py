@@ -20,7 +20,30 @@ from satnogs_api_client import fetch_observation_data, fetch_tle_of_observation
 
 logger = logging.getLogger(__name__)
 
-__version__ = '0.2'
+__version__ = '0.3.dev'
+
+STRF_HINT_TEXT = """
+Modify the following line:
+ST_DATADIR="$HOME/src/strf" # path to your strf directory
+
+Then run the following commands:
+cd $ST_DATADIR
+
+STH_DATA_DIR="{sth_data_dir}"
+OBS_ID={observation_id}
+SITE_ID={site_id}
+NORAD_ID={norad_id}
+
+ST_TLEDIR=$STL_DATA_DIR/tles
+ST_COSPAR={site_id}
+
+export ST_DATADIR
+export ST_TLEDIR
+export ST_COSPAR
+
+./rffit -d $STH_DATA_DIR/doppler_obs/$OBS_ID.dat -i $NORAD_ID -c $STH_DATA_DIR/tles/$OBS_ID.txt -s $SITE_ID
+"""
+
 
 def tabulation_helper_dialog(lower_left, upper_right,
                              bandwidth, duration,
@@ -56,8 +79,8 @@ def tabulation_helper_dialog(lower_left, upper_right,
         if not (event.button==1 and event.inaxes and tb.mode == ''):
             return
 
-        event_x = int(event.xdata)
-        event_y = int(event.ydata)
+        event_x = round(event.xdata)
+        event_y = round(event.ydata)
 
         markers['x'].append(event_x)
         markers['y'].append(event_y)
@@ -142,8 +165,15 @@ def add_station_to_sitestxt(station):
         with open(SITES_TXT, 'a') as f:
             f.write(entry)
 
+def print_strf_hint(observation_id, site_id, norad_id):
+    print(STRF_HINT_TEXT.format(
+        sth_data_dir=strf_path.data_dir(),
+        observation_id=observation_id,
+        site_id=site_id,
+        norad_id=norad_id
+    ))
 
-def tabulation_helper(observation_id):
+def tabulation_helper(observation_id, show_hint=False):
     # Fetch waterfall image and observation data
     observation = fetch_observation_data([observation_id])[0]
     tle = fetch_tle_of_observation(observation_id)
@@ -205,6 +235,13 @@ def tabulation_helper(observation_id):
     observer.lon = str(station['lng'])
     observer.elevation = station['alt']
 
+    # Extract norad id from TLE (can be different to the norad id of the Satellite entry in SatNOGS DB)
+    norad_id_from_tle = satellite.catalog_number
+    if norad_id_from_tle != observation['norad_cat_id']:
+        print('WARNING: NORAD ID mismatch between Observation Metadata and TLE '
+              f'({observation["norad_cat_id"]} vs {norad_id_from_tle})!\n'
+              'Use NORAD ID from TLE for rffit.'
+              )
 
     def remove_doppler_correction(t, freq):
         # Remove the doppler correction
@@ -219,7 +256,8 @@ def tabulation_helper(observation_id):
                              f_center, f_shift, filename_out,
                              waterfall_matrix,
                              epoch_start, site_id, correction_method=remove_doppler_correction)
-
+    if show_hint:
+        print_strf_hint(observation_id, site_id, norad_id_from_tle)
 
 if __name__ == '__main__':
     strf_path.init_paths()
@@ -231,6 +269,11 @@ if __name__ == '__main__':
         "--version",
         action="version",
         version=f'SatNOGS Waterfall Tabulation Helper version {__version__}',
+    )
+    parser.add_argument(
+        "--show-hint",
+        action="store_true",
+        help='Output hints for using strf rffit',
     )
 
     args = parser.parse_args()
@@ -244,4 +287,4 @@ if __name__ == '__main__':
                            f'Remove the following file if you want to re-run the analysis:\n'
                            f'{strf_path.doppler_obs(observation_id)}\n')
             continue
-        tabulation_helper(observation_id)
+        tabulation_helper(observation_id, args.show_hint)

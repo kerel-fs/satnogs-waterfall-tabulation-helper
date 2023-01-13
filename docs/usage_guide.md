@@ -45,8 +45,35 @@ c - Back (view)
 ```
 
 If you have strf rffit installed, use it to for orbit fitting:
+Since path handling with STRF is complicated sometimes, the tabulation helper can output a hint text on
+using rffit when called with the argument `--show-hint`:
+
 ```
-./rffit -d $SATNOGS_OBS_DIR/1102230.dat -i 44356 -c $SATNOGS_TLE_DIR/1102230.txt -s 7669
+❯ ./satnogs_waterfall_tabulation_helper.py 806927 --show-hint
+WARNING: NORAD ID mismatch between Observation Metadata and TLE (44420 vs 44339)!
+Use NORAD ID from TLE for rffit.
+[...]
+INFO: Stored 4 selected track points in /home/kerel/.local/share/satnogs-tabulation-helper/doppler_obs/806927.dat
+
+Modify the following line:
+ST_DATADIR="$HOME/src/strf" # path to your strf directory
+
+Then run the following commands:
+cd $ST_DATADIR
+
+STH_DATA_DIR="/home/kerel/.local/share/satnogs-tabulation-helper"
+OBS_ID=806927
+SITE_ID=50
+NORAD_ID=44339
+
+ST_TLEDIR=$STL_DATA_DIR/tles
+ST_COSPAR=50
+
+export ST_DATADIR
+export ST_TLEDIR
+export ST_COSPAR
+
+./rffit -d $STH_DATA_DIR/doppler_obs/$OBS_ID.dat -i $NORAD_ID -c $STH_DATA_DIR/tles/$OBS_ID.txt -s $SITE_ID
 ```
 
 ## Other commands
@@ -56,12 +83,12 @@ If you have strf rffit installed, use it to for orbit fitting:
   ./contrib/download_satnogs_tle.py $OBSERVATION_ID
   ```
 
-## Known issues
+## Known limitations
 
-- Only SatNOGS stations <999 are supported! The strf sites.txt parser supports 4-digit site ids only.
-  In case of problems, modity the `site_id` in the doppler obs (`.dat`-files, last column) to something valid,
-  and modify the respective entry in `sites.txt`. By default the tabulation-helper will generate a `site_id` of
-  the form `7{station_id}`, e.g. station 669 will result in `site_id=7669`.
+- The `site_id` in data files is set to the SatNOGS Station ID. When using STRF, make sure to either
+  use a `sites.txt` with COSPAR IDs or with SatNOGS Station IDs. A previous version of the SatNOGS
+  Waterfall Tabulation Helper performed a mapping of SatNOGS Station IDs,
+  e.g. station 669 became `site_id` 7669. Thus only SatNOGS stations <999 were supported.
 
 ## Advanced configuration
 
